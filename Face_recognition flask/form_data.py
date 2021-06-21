@@ -29,13 +29,12 @@ def gen():
     while True:
         ret,frame=camera.read();
         image = cv2.resize(frame, (224, 224))
-        img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        li = ['chaya', 'manja', 'queany', 'rakesh', 'sam', 'sankalpa', 'sapana', 'shradda', 'shreya', 'sowmya',
+        li = ['chaya', 'manoj', 'queany', 'rakesh', 'sambhrama', 'sankalpa', 'sapana', 'shradda', 'shreya', 'sowmya',
               'suprabha', 'swathi', 'thrupthi', 'vaishali', 'vaishu']
         haar = cv2.CascadeClassifier('C:\\haarcascades\\haarcascade_eye.xml')
         haar1 = cv2.CascadeClassifier('C:\\haarcascades\\haarcascade_frontalface_default.xml')
-        eyes = haar.detectMultiScale(img)
-        face = haar1.detectMultiScale(img)
+        eyes = haar.detectMultiScale(cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY))
+        face = haar1.detectMultiScale(cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY))
 
         y_pred1=model1.predict_classes(image.reshape(1, 224, 224, 3))
         y_pred = int(model.predict_classes(image.reshape(1, 224, 224, 3)))
@@ -43,20 +42,12 @@ def gen():
             name = "No Mask " + li[y_pred]
         else:
             name = "With Mask " + li[y_pred]
-        for (top, right, bottom, left) in eyes:
-            startX = int(left)
-            startY = int(top)
-            endX = int(right)
-            endY = int(bottom)
-            cv2.rectangle(image, (startX, startY), ( endX, endY), (0, 255, 0), 2)
-        for (top, right, bottom, left) in face:
-            startX = int(left)
-            startY = int(top)
-            endX = int(right)
-            endY = int(bottom)
-            cv2.rectangle(image, (startX, startY), (startX + endX, startY + endY), (0, 255, 0), 2)
-            cv2.putText(image, name, (endX - 60, endY - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
-        ret, jpeg = cv2.imencode('.jpg', image)
+        for x, y, w, h in eyes:
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+        for x, y, w, h in face:
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            cv2.putText(frame, name, (30,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 1, cv2.LINE_AA)
+        ret, jpeg = cv2.imencode('.jpg', frame)
         frame=jpeg.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
